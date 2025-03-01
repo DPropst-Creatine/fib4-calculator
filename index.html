@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIB-4 Score Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white text-center">FIB-4 Score Calculator</h1>
+            
+            <form id="fib4Form" class="space-y-4">
+                <div class="form-group">
+                    <label for="age" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Age (years)</label>
+                    <input type="number" id="age" name="age" min="0" max="120" step="1" required 
+                        class="w-full px-4 py-2 text-base rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ast" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">AST (U/L)</label>
+                    <input type="number" id="ast" name="ast" min="0" step="0.1" required 
+                        class="w-full px-4 py-2 text-base rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                
+                <div class="form-group">
+                    <label for="alt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ALT (U/L)</label>
+                    <input type="number" id="alt" name="alt" min="0" step="0.1" required 
+                        class="w-full px-4 py-2 text-base rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                
+                <div class="form-group">
+                    <label for="platelets" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Platelets (10⁹/L)</label>
+                    <input type="number" id="platelets" name="platelets" min="0" step="1" required 
+                        class="w-full px-4 py-2 text-base rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                </div>
+                
+                <button type="submit" class="w-full py-2 px-4 bg-primary hover:bg-opacity-90 text-white font-semibold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75 transition-colors">
+                    Calculate
+                </button>
+            </form>
+        </div>
+        
+        <div id="disclaimerContainer" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-4 hidden">
+            <div class="border-l-4 border-yellow-400 p-4 bg-yellow-50 dark:bg-gray-700">
+                <p class="text-sm text-gray-700 dark:text-gray-300">
+                    <strong>Disclaimer:</strong> This calculator is not medical advice and is for informational purposes only. It is based on up-to-date, peer-reviewed research on liver fibrosis risk assessment. FIB-4 is a widely used non-invasive test, but results should always be discussed with your healthcare provider before making any medical decisions. Only a licensed healthcare professional can diagnose or rule out liver disease. If you have concerns about your liver health, seek medical advice.
+                </p>
+            </div>
+        </div>
+
+        <div id="resultContainer" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Result</h2>
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-gray-700 dark:text-gray-300">FIB-4 Score:</p>
+                <p id="scoreValue" class="text-xl font-bold text-primary"></p>
+            </div>
+            
+            <div id="interpretationContainer" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 id="riskTitle" class="text-lg font-semibold mb-2 text-gray-800 dark:text-white"></h3>
+                <p id="riskDescription" class="text-gray-700 dark:text-gray-300 mb-3"></p>
+                
+                <p class="font-medium text-gray-700 dark:text-gray-300 mb-2">🔹 Evidence-based recommendations include:</p>
+                <div id="recommendationsList" class="ml-4 space-y-2 text-gray-700 dark:text-gray-300"></div>
+                
+                <p id="consultationAdvice" class="mt-4 text-gray-700 dark:text-gray-300 font-medium"></p>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                    <span class="font-medium">Formula:</span> (Age × AST) / (Platelets × √ALT)
+                </p>
+                
+                <div class="mt-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                        <span class="font-medium">Reference:</span> Caussy C, Vergès B, Leleu D, et al. Screening for metabolic dysfunction--associated steatotic liver disease--related advanced fibrosis in diabetology: a prospective multicenter study. <em>Diabetes Care.</em> 2025;dc242075. doi:10.2337/dc24-2075
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 mt-6">
+                <button id="printButton" class="flex items-center justify-center py-2 px-4 bg-primary hover:bg-opacity-90 text-white font-semibold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75 transition-colors w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print Report
+                </button>
+                
+                <button id="saveButton" class="flex items-center justify-center py-2 px-4 bg-primary hover:bg-opacity-90 text-white font-semibold rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75 transition-colors w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Save Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print-only stylesheet -->
+    <style id="printStyles">
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            #resultContainer, #disclaimerContainer {
+                background-color: white !important;
+                color: black !important;
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                margin-bottom: 20px !important;
+            }
+            
+            #interpretationContainer {
+                page-break-inside: avoid;
+            }
+            
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 1rem;
+                font-size: 1.5rem;
+                font-weight: bold;
+            }
+            
+            #printFooter {
+                display: block !important;
+                text-align: center;
+                margin-top: 2rem;
+                font-size: 0.8rem;
+                color: #666;
+            }
+        }
+    </style>
+
+    <!-- Save report modal -->
+    <div id="saveModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">Save FIB-4 Report</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mb-4 p-3 border rounded-md bg-yellow-50 dark:bg-gray-700 border-yellow-200 dark:border-gray-600">
+                <p class="text-sm text-gray-700 dark:text-gray-300">
+                    To save this report, use one of these methods:
+                </p>
+                <ul class="list-disc ml-5 mt-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>Right-click anywhere in the report below and select "Save as..." or "Save page as..."</li>
+                    <li>Press Ctrl+S (Windows) or Cmd+S (Mac) to save the page</li>
+                    <li>Take a screenshot of the report (browser extensions can help capture the full report)</li>
+                </ul>
+            </div>
+            
+            <div id="reportContent" class="border rounded-md p-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-white">
+                <!-- Report content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check for dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Global variables to store input values and calculation result
+        let patientAge, patientAST, patientALT, patientPlatelets, fib4Score;
+
+        document.getElementById('fib4Form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get input values and store globally
+            patientAge = parseFloat(document.getElementById('age').value);
+            patientAST = parseFloat(document.getElementById('ast').value);
+            patientALT = parseFloat(document.getElementById('alt').value);
+            patientPlatelets = parseFloat(document.getElementById('platelets').value);
+            
+            // Validate inputs
+            if (isNaN(patientAge) || isNaN(patientAST) || isNaN(patientALT) || isNaN(patientPlatelets)) {
+                alert("Please enter valid numbers for all fields");
+                return;
+            }
+            
+            if (patientPlatelets === 0) {
+                alert("Platelets value cannot be zero");
+                return;
+            }
+            
+            if (patientALT === 0) {
+                alert("ALT value cannot be zero");
+                return;
+            }
+            
+            // Show disclaimer first
+            document.getElementById('disclaimerContainer').classList.remove('hidden');
+            
+            // Calculate FIB-4 score
+            fib4Score = (patientAge * patientAST) / (patientPlatelets * Math.sqrt(patientALT));
+            
+            // Display the score
+            document.getElementById('scoreValue').textContent = fib4Score.toFixed(2);
+            
+            // Interpret the score and display recommendations
+            interpretScore(fib4Score);
+            
+            // Show the result container
+            document.getElementById('resultContainer').classList.remove('hidden');
+        });
+        
+        function interpretScore(score) {
+            const riskTitle = document.getElementById('riskTitle');
+            const riskDescription = document.getElementById('riskDescription');
+            const recommendationsList = document.getElementById('recommendationsList');
+            const consultationAdvice = document.getElementById('consultationAdvice');
+            
+            // Clear previous content
+            recommendationsList.innerHTML = '';
+            
+            // Create a function to add recommendations as list items
+            function addRecommendation(text) {
+                const item = document.createElement('p');
+                item.className = 'flex items-start';
+                item.innerHTML = `<span class="mr-2">•</span><span>${text}</span>`;
+                recommendationsList.appendChild(item);
+            }
+            
+            // Low Risk: FIB-4 < 1.30
+            if (score < 1.30) {
+                riskTitle.innerHTML = '✅ Low Risk (Reassess in 2-3 Years)';
+                riskTitle.className = 'text-lg font-semibold mb-2 text-green-600 dark:text-green-400';
+                
+                riskDescription.textContent = 'Your FIB-4 score suggests a low probability of advanced liver fibrosis.';
+                
+                addRecommendation('Routine FIB-4 reassessment in 2-3 years unless new risk factors arise.');
+                addRecommendation('Maintaining a balanced diet (Mediterranean-style eating pattern), regular exercise, and weight management to support liver health.');
+                addRecommendation('Avoiding excessive alcohol consumption and monitoring metabolic health (blood sugar, cholesterol, blood pressure).');
+                
+                consultationAdvice.textContent = '🩺 If you have additional risk factors (e.g., uncontrolled diabetes, obesity, persistently elevated liver enzymes), discussing a more comprehensive liver health plan with your provider may still be beneficial. Discuss your results with your healthcare provider.';
+            }
+            // Possible Risk: FIB-4 ≥ 1.30 and < 2.67
+            else if (score >= 1.30 && score < 2.67) {
+                riskTitle.innerHTML = '⚠️ Possible Risk (Further Testing Recommended)';
+                riskTitle.className = 'text-lg font-semibold mb-2 text-yellow-600 dark:text-yellow-400';
+                
+                riskDescription.textContent = 'Your FIB-4 score suggests a moderate probability of advanced liver fibrosis. Additional testing may help clarify your risk.';
+                
+                addRecommendation('<strong>Non-invasive second-line tests with validated diagnostic accuracy for fibrosis detection:</strong>');
+                addRecommendation('Vibration-Controlled Transient Elastography (VCTE, FibroScan®): Sensitivity ~85%, specificity ~80% for detecting advanced fibrosis.');
+                addRecommendation('Enhanced Liver Fibrosis (ELF) Test: A blood test with ~78% sensitivity and ~76% specificity for advanced fibrosis.');
+                addRecommendation('Shear Wave Elastography (SWE): Ultrasound-based stiffness measurement with sensitivity ~85%, specificity ~75%.');
+                
+                addRecommendation('<strong>Lifestyle-based liver health strategies:</strong>');
+                addRecommendation('Nutritional modifications: Higher intake of whole foods, lean proteins, and fiber while reducing refined sugars and processed foods.');
+                addRecommendation('Exercise recommendations: Aiming for at least 150 minutes of moderate activity per week (e.g., brisk walking, cycling) with added resistance training.');
+                addRecommendation('Weight management: Studies indicate a 7-10% weight loss in overweight individuals can reduce liver fat and inflammation.');
+                
+                consultationAdvice.textContent = '🩺 Discuss these findings with your healthcare provider to determine the best next steps based on your overall health profile.';
+            }
+            // High Risk: FIB-4 ≥ 2.67
+            else {
+                riskTitle.innerHTML = '❗ High Risk (Specialist Referral Recommended)';
+                riskTitle.className = 'text-lg font-semibold mb-2 text-red-600 dark:text-red-400';
+                
+                riskDescription.textContent = 'Your FIB-4 score suggests a high probability of advanced liver fibrosis or cirrhosis. A referral to a liver specialist (hepatologist) is strongly recommended.';
+                
+                addRecommendation('Specialist evaluation with a hepatologist for comprehensive assessment and potential liver biopsy.');
+                
+                addRecommendation('<strong>Advanced fibrosis confirmation tests:</strong>');
+                addRecommendation('FibroScan (VCTE) ≥ 8 kPa, SWE ≥ 8 kPa, ELF ≥ 9.8 strongly suggest significant liver disease.');
+                addRecommendation('MRI-based elastography (if available) has the highest accuracy for fibrosis staging.');
+                
+                addRecommendation('<strong>Lifestyle & medical considerations:</strong>');
+                addRecommendation('Nutrition: A Mediterranean-style diet with reduced processed foods and added sugars.');
+                addRecommendation('Physical activity: Increasing moderate-to-vigorous intensity aerobic exercise + resistance training.');
+                addRecommendation('Avoidance of liver stressors: Alcohol intake reduction/elimination and medication review for hepatotoxic risks.');
+                
+                consultationAdvice.innerHTML = '🩺 <strong>Consult a healthcare provider as soon as possible to discuss appropriate next steps and personalized management.</strong> Discuss your results with your healthcare provider.';
+            }
+        }
+        
+        // Print functionality
+        document.getElementById('printButton').addEventListener('click', function() {
+            // Create a timestamp for the report
+            const date = new Date();
+            const timestamp = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            
+            // Add print-only elements
+            const printHeader = document.createElement('div');
+            printHeader.className = 'print-header hidden';
+            printHeader.innerHTML = `
+                <h1>FIB-4 Score Report</h1>
+                <p>Generated on: ${timestamp}</p>
+            `;
+            
+            const printFooter = document.createElement('div');
+            printFooter.id = 'printFooter';
+            printFooter.className = 'hidden';
+            printFooter.innerHTML = `
+                <p>FIB-4 Score Report | Generated on: ${timestamp}</p>
+                <p>This report is for informational purposes only and is not a substitute for professional medical advice.</p>
+            `;
+            
+            // Add elements to page temporarily for printing
+            document.body.prepend(printHeader);
+            document.body.appendChild(printFooter);
+            
+            // Add 'no-print' class to form
+            document.querySelector('.container > div:first-child').classList.add('no-print');
+            
+            // Print
+            window.print();
+            
+            // Remove print-only elements after printing
+            printHeader.remove();
+            printFooter.remove();
+            document.querySelector('.container > div:first-child').classList.remove('no-print');
+        });
+        
+        // Save functionality
+        document.getElementById('saveButton').addEventListener('click', function() {
+            const modal = document.getElementById('saveModal');
+            const reportContent = document.getElementById('reportContent');
+            
+            // Create a timestamp for the report
+            const date = new Date();
+            const timestamp = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            
+            // Create the report content
+            reportContent.innerHTML = `
+                <div class="text-center mb-4">
+                    <h2 class="text-xl font-bold">FIB-4 Score Report</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Generated on: ${timestamp}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="font-semibold">Patient Information</h3>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <div>Age: <span class="font-medium">${patientAge} years</span></div>
+                        <div>AST: <span class="font-medium">${patientAST} U/L</span></div>
+                        <div>ALT: <span class="font-medium">${patientALT} U/L</span></div>
+                        <div>Platelets: <span class="font-medium">${patientPlatelets} 10⁹/L</span></div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-semibold">FIB-4 Score:</h3>
+                        <span class="text-xl font-bold text-primary">${fib4Score.toFixed(2)}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Formula: (Age × AST) / (Platelets × √ALT)
+                    </p>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="${document.getElementById('riskTitle').className}">${document.getElementById('riskTitle').innerHTML}</h3>
+                    <p>${document.getElementById('riskDescription').textContent}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">🔹 Evidence-based recommendations include:</h3>
+                    <div class="ml-4 space-y-2">
+                        ${document.getElementById('recommendationsList').innerHTML}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <p class="font-medium">${document.getElementById('consultationAdvice').innerHTML}</p>
+                </div>
+                
+                <div class="mb-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        <span class="font-medium">Reference:</span> Caussy C, Vergès B, Leleu D, et al. Screening for metabolic dysfunction--associated steatotic liver disease--related advanced fibrosis in diabetology: a prospective multicenter study. <em>Diabetes Care.</em> 2025;dc242075. doi:10.2337/dc24-2075
+                    </p>
+                </div>
+                
+                <div class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                    <p>This report is for informational purposes only and is not a substitute for professional medical advice.</p>
+                </div>
+            `;
+            
+            // Show the modal
+            modal.classList.remove('hidden');
+        });
+        
+        // Close save modal
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('saveModal').classList.add('hidden');
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('saveModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
